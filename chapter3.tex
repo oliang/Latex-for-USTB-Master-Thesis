@@ -1,4 +1,5 @@
 \chapter{时空折中算法}
+本章主要要介绍时空折中算法与
 \section{Martin Hellman最初的算法}
 	\subsection{预运算}
 	\subsection{在线分析阶段}
@@ -8,4 +9,7 @@
 \section{Philippe Oechslin的彩虹表算法}
 	\subsection{非完美彩虹表}
 	\subsection{完美彩虹表}
-
+\begin{equation}
+P_{table} \ge 1-\prod^{t}_{i=1}(1-\frac{m_{i}}{N})
+\end{equation}
+当$m_{1}=m$且$m_{n+1} = N(1-e^{-\tfrac{m_{n}}{N}})$
