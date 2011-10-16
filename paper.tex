@@ -1,0 +1,62 @@
+\documentclass[a4paper,openany,twoside]{ctexbook}
+%\usepackage{ctex}
+\usepackage{amsmath}
+\usepackage{graphicx}
+%\usepackage{ctexcap}
+%\usepackage[super]{cite}
+
+%链接设置
+\usepackage[CJKbookmarks=true,pagebackref,colorlinks]{hyperref}
+%版面设置
+% ==========================================================
+\usepackage[top=5mm,text={140mm,247mm},includehead]{geometry}
+%\usepackage[top=5mm,includehead]{geometry}
+%\linespread{1.6667}
+\usepackage{setspace}
+\doublespacing
+
+%标题设置
+% ==========================================================
+\CTEXsetup[beforeskip={-7mm},afterskip={17pt}]{chapter}
+\CTEXsetup[format={\Large\bf},beforeskip={13pt},afterskip={13pt}]{section}
+%页眉页脚设置
+% ==========================================================
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\headheight      15mm             % 页眉高
+\headsep         10mm              % 页眉距离
+\fancypagestyle{plain}{\fancyhf{}%
+\fancyhead[OC]{\color{gray}\fangsong 北京科技大学硕士学位论文}%
+\fancyhead[EC]{\color{gray}\fangsong 基于时空折中算法的密码分析研究与实现}%
+\fancyfoot[C]{\color{gray}- \thepage~-}
+%\fancyfoot[C]{\thepage}
+\renewcommand{\headrule}{\color{gray}\hrule width\headwidth}}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[OC]{\color{gray}\fangsong 北京科技大学硕士学位论文}
+\fancyhead[EC]{\color{gray}\fangsong 基于时空折中算法的密码分析研究与实现}
+\fancyfoot[C]{\color{gray}- \thepage~-}
+\renewcommand{\headrule}{\color{gray}\hrule width\headwidth}
+%\renewcommand{\headrulewidth}{0.4pt}
+%\renewcommand{\footruleskip}{0mm}
+
+% ===========================================================
+\begin{document}
+\pagenumbering{Roman}
+\include{thanks}
+\include{abstract}
+\include{contents}
+\include{chapter1}
+\include{chapter2}
+\include{chapter3}
+\include{chapter4}
+\include{chapter5}
+\include{chapter6}
+
+%Reference
+%\bibliographystyle{plain} \bibliography{reference}
+\bibliographystyle{unsrt} \bibliography{reference}
+\nocite{*}
+\addcontentsline{toc}{chapter}{参考文献} 
+\end{document}
+

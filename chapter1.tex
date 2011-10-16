@@ -1,0 +1,15 @@
+\chapter{绪论}
+\pagenumbering{arabic}
+\section{研究背景及意义}
+{在}
+{1980年，Martin Hellman\cite{hellman}提出了一个“时间空间折中”的密码分析算法，使用了预先计算好并保存在内存和磁盘里面的数据，减少了密码分析需要的时间。这个算法在1982年被Rivest提出改进，减少了密码分析过程中所需要的存储空间。
+
+2003年7月瑞士洛桑联邦技术学院的Philippe Oechslin公布了一些实验数据，他及其所属的安全及密码学实验室（LASEC）采用了时间空间折中算法，使得密码破解的效率大大提高。他们开发的Ophcrack项目可以将一个操作系统的用户登录密码破解速度由1分41秒，提升到13.6秒\cite{PO}。该项目提供了一个破解视窗作业系统下的LAN Manager散列（比如hash文件）的程序，作者免费提供了一些Rainbow table，可以在短至几秒内破解最多14个英文字母的密码，有99.9％的成功率。从2.3版开始可以破解 NT 散列，这功能对已经关闭 LAN Manager 散列的系统（Windows Vista 的预订设定）或是长于14个字母的密码特别有用。
+
+同年project-rainbowcrack项目开始立项，该项目基于Philippe Oechslin提出的彩虹表，用C++基本实现了对MD5、SHA-1算法的低位数低密钥空间的破解[3]。接着出现了一个分布式彩虹表项目Free Rainbow Tables[4]，这个项目的分布式系统是基于伯克利开放式网络计算平台（BOINC）。
+
+
+}
+\section{国内外研究现状与进展}
+\section{本文研究现状}
+\section{论文组织结构}
