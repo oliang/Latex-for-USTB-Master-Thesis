@@ -90,14 +90,12 @@ E(F)\leq \frac{mt(t+1)}{2N}
 \label{sec:3.3}
 	\subsection{非完美彩虹表}
 如\ref{sec:3.1}节所述，Hellman表的一个主要不足是表大小的限制，当以增大表大小来获得更高得成功率时，表中的节点碰撞而导致的链合并概率也会随之增加，且增加的比例同m与t的平方成正比。为了解决这一不足，在2003年，Oechslin在Hellman算法的基础上结合了Rivest的差异点（DP）的优势，提出了一种在当时比较先进的算法－－彩虹表算法\cite{PO}。通过这种时空折中算法预运算所生成的表，我们称之为彩虹表（Rainbow Table），彩虹表中的行称为彩虹链。
-
 与Hellman算法在一张表中只使用一个f函数不同，彩虹表的每一列使用的R函数都不一样，以构造不同的f函数，如式\eqref{equ:3.10}所示：
 \begin{equation}
 \label{equ:3.10}
 f_i(k)=R_i(S_k(P)) \quad \quad  (1\leq i \leq t) 
 \end{equation}
 从上式可以看出，彩虹表用$R_1,R_2,\ldots ,R_t$代替Hellman表中的R函数。因此，只有在当彩虹表中两个节点在同一列发生碰撞时，才会发生链合并。换句话说，如果碰撞发生在不同列的两个节点，由于不同列采用的不同的R函数，碰撞点之后的链不会被合并。
-
 我们假设一张彩虹表有m条彩虹链，每条彩虹链的长度为t，即为$m\times t$的矩阵，如式\eqref{equ:3.11}：
 \begin{equation}
 \label{equ:3.11}
@@ -120,8 +118,31 @@ P_{Rainbow} \ge 1-\prod^{t}_{i=1}\left(1-\frac{m_{i}}{N}\right) \nonumber\\
 \end{eqnarray}
 
 比较\eqref{equ:3.7}式和\eqref{equ:3.12}式,我们可以发现t张$m\times t$Hellman表与1张$mt\times t$的彩虹表有大致相同的成功率。因为这两种算法所产生的表都覆盖了$mt^2$的密钥空间，同时也都包含了t个不同的R函数。在假警方面，两者也有类似的共同点，单张彩虹表的一列以及t张Hellman表，若包含mt个节点，则这些节点中的任一碰撞都将会导致链的合并。
+上述这样等规模的Hellman表和彩虹表的比较可以参考式\eqref{equ:3.20}
+\begin{gather}
+\label{equ:3.20}
+\begin{bmatrix}
+k_{1,0}^1\xlongrightarrow{f_1} k_{1,1}^1\xlongrightarrow{f_1} \cdots \xlongrightarrow{f_1}k_{1,t}^1 \\
+\vdots \\
+k_{m,0}^1\xlongrightarrow{f_1} k_{m,1}^1\xlongrightarrow{f_1} \cdots \xlongrightarrow{f_1}k_{m,t}^1 \\
+\end{bmatrix} \\ 
+\begin{bmatrix}
+k_{1,0}^t\xlongrightarrow{f_t} k_{1,1}^t\xlongrightarrow{f_t} \cdots \xlongrightarrow{f_t}k_{1,t}^t \\
+\vdots \\
+k_{m,0}^t\xlongrightarrow{f_t} k_{m,1}^t\xlongrightarrow{f_t} \cdots \xlongrightarrow{f_t}k_{m,t}^t \\
+\end{bmatrix}\\
+\begin{bmatrix}
+k_{1,0}^1\xlongrightarrow{f_1} k_{1,1}^1\xlongrightarrow{f_2} \cdots \xlongrightarrow{f_t}k_{1,t}^1 \\
+k_{2,0}^1\xlongrightarrow{f_1} k_{1,1}^1\xlongrightarrow{f_2} \cdots \xlongrightarrow{f_t}k_{2,t}^1 \\
+\cdots \\ 
+\\ \\
+\cdots \\
+k_{mt-1,0}^1\xlongrightarrow{f_1} k_{1,1}^1\xlongrightarrow{f_2} \cdots \xlongrightarrow{f_t}k_{mt-1,t}^1 \\
+k_{mt,0}^1\xlongrightarrow{f_1} k_{1,1}^1\xlongrightarrow{f_2} \cdots \xlongrightarrow{f_t}k_{mt,t}^1
+\end{bmatrix}
+\end{gather}
 在线分析过程中，彩虹表算法的搜索过程与Hellman算法有所不同，首先，将给定的密文C代入$R_t$的$y_1$，并检索是否存在某个$EP_i=y_1$，如果找到了匹配的$EP_i$，这可以通过保存的对应$SP_i$来恢复$k_{t,t-1}$。若找不到匹配的EP，则将密文C依次代入$R_{t-1}$，再次搜索判断是否存在正确的密钥在第t-2列中。以此类推，最坏的情况下将遍历表中所有的t列，以f函数迭代次数为标准，这个代价为$1+2+\cdots +(t-1)=\frac{t(t-1)}{2}$次。而Hellman表需要搜索$t^2$次，因而单张的彩虹表相比t张Hellman表，搜索代价只有不到Hellman算法的一半。
-	
+
 在此小结一下彩虹表相对Hellman表的优点：\\
 1），从搜索次数角度来看，彩虹表最多需要比较$log(mt)*t$次，而Hellman表将最多需要$log(t)*t^2$，即搜索t表t列。因此彩虹表的比较次数约为Hellman的$\frac{1}{t}$，彩虹表相应的TMTO曲线为：
 \begin{equation}
