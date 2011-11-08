@@ -1,0 +1,707 @@
+\appendix
+\chapter{MATLAB程序}
+\section{破解成功率}
+\begin{lstlisting}
+\% 1 - (1 - 1 / N)^(m(1) + m(2) + m(3) + ... + m(t - 1))
+\% m(1) = m, m(i) = N * (1 - (1 - 1 / N) ^ m(i - 1))
+function ret = calc_success_probability(n, min, max, t, m, table_count)
+format long g;
+arr = zeros(1, t - 1);
+arr(1) = m;
+format long g;
+N = calc_N(n,min,max);
+for i = 2 : t - 1
+    format long g;
+	arr(i) = N * (1 - (1 - 1 / N) ^ arr(i - 1));
+end;
+exp = 0;
+for i = 1 : t - 1
+    format long g;
+	exp = exp + arr(i);
+end;
+format long g;
+success_probability_1 = 1 - (1 - 1 / N) ^ exp;
+success_probability_table_count=1-(1-success_probability_1)^table_count;
+ret = success_probability_table_count;
+
+function ret = calc_N( n, min, max)
+arr = zeros(1, max - 1);
+for i = 1 : max
+	arr(i) = n^i;
+end;
+exp = 0;
+for i = 1 : max
+	exp = exp + arr(i);
+end;
+ret = exp;
+\end{lstlisting}
+\section{磁盘空间与成功率}
+\begin{lstlisting}
+function advantage_of_multiple_table(N, t, disk_usage_min, disk_usage_max)
+grid_count = 100;
+disk_usage = linspace(disk_usage_min, disk_usage_max, grid_count);
+m = disk_usage * 1024 * 1024 / 16;
+success_probability = zeros(1, grid_count);
+
+for table_count = 1 : 5
+  for i = 1 : grid_count
+    success_probability(i)=calc_success_probability(N,t,m(i)/table_count);
+    success_probability(i)=1-(1-success_probability(i))^table_count;
+  end;
+  if table_count ==1
+    plot(disk_usage, success_probability,'-c*');
+  end
+  if table_count ==2
+    plot(disk_usage,success_probability,'-x')
+   end
+  if table_count == 3
+    plot(disk_usage,success_probability,'k-.')
+  end
+  if table_count == 4
+    plot(disk_usage,success_probability,'-+')
+  end
+  if table_count == 5
+    plot(disk_usage,success_probability,'y-o')
+  end
+  if N == 8353082582 & t == 2100 & table_count == 5
+    plot(8000000*16*5/1024/1024, 0.999,'s','MarkerFaceColor','b',
+                          'MarkerEdgeColor','b','MarkerSize',3);
+    text(8000000*16*5/1024/1024, 0.999,'G','HorizontalAlignment','right',
+                                           'VerticalAlignment','bottom');
+  end;
+  hold on;
+end;
+legend_int = zeros(5 - 1 + 1, 1);
+for table_count = 1 : 5
+	legend_int(table_count - 1 + 1, 1) = table_count;
+end;
+legend_str = int2str(legend_int);
+legend(legend_str);
+for i = 1 : grid_count
+	success_probability(i) = 0.999;
+end;
+plot(disk_usage, success_probability, 'r');
+
+for i = 1 : grid_count
+	success_probability(i) = 1;
+end;
+plot(disk_usage, success_probability, 'r');
+
+xlabel('磁盘空间(MB)');
+ylabel('成功概率');
+\end{lstlisting}
+\section{密钥空间}
+\begin{lstlisting}
+function ret = calc_N( n, min, max)
+arr = zeros(1, max );
+for i = 1 : max
+	arr(i) = n^i;
+end;
+
+exp = 0;
+for i = 1 : max
+	exp = exp + arr(i);
+end;
+format long g;
+ret = exp;
+\end{lstlisting}
+\section{彩虹链长度}
+\begin{lstlisting}
+function ret = calc_t(N, success_probability, m, table_count)
+success_probability_each=1-exp(log(1-success_probability)/table_count);
+exp_min = log(1 - success_probability_each) / log(1 - 1 / N);
+
+exp_all = 0;
+t = 0;
+next = m;
+
+while exp_all < exp_min
+	exp_all = exp_all + next;
+	t = t + 1;
+	next = N * (1 - (1 - 1 / N) ^ next);
+
+	if t > 131072	% too large
+		break;
+	end;
+end;
+
+ret = t;
+\end{lstlisting}
+\section{磁盘占用空间}
+\begin{lstlisting}
+function ret = calc_disk_usage(m, table_count)
+ret = ceil(m*16*table_count / 1024 / 1024 );
+\end{lstlisting}
+\section{最大破解时间}
+\begin{lstlisting}
+function ret = calc_max_cryptanalysis_time(t, table_count, step_speed)
+ret = t*t/2 / step_speed * table_count;
+\end{lstlisting}
+\section{实际破解时间}
+\begin{lstlisting}
+                               rate_of_each_table * 1 
+(1 - rate_of_each_table) ^ 1 * rate_of_each_table * 2 
+(1 - rate_of_each_table) ^ 2 * rate_of_each_table * 3
+ ...
+(1 - rate_of_each_table) ^ (table_count - 1)*rate_of_each_table*table_count
+(1 - rate_of_each_table) ^ table_count * table_count
+
+function ret = calc_mean_cryptanalysis_time(N,t,m,table_count,step_speed)
+rate_of_each_table = calc_success_probability(N, t, m);
+temp = rate_of_each_table;
+all  = 0;
+for i = 1 : table_count
+    all = all + temp * i;
+    temp = temp * (1 - rate_of_each_table);
+end;
+all = all + (1 - rate_of_each_table) ^ table_count * table_count;
+
+ret = t*t/2 / step_speed * all;
+\end{lstlisting}
+\section{最大磁盘读取时间}
+\begin{lstlisting}
+function ret = calc_max_disk_access_time(m, table_count, disk_speed)
+ret = m*16/1024/1024 * disk_speed * table_count;
+\end{lstlisting}
+\section{实际磁盘读取时间}
+\begin{lstlisting}
+                               rate_of_each_table * 1 
+(1 - rate_of_each_table) ^ 1 * rate_of_each_table * 2 
+(1 - rate_of_each_table) ^ 2 * rate_of_each_table * 3 
+ ...
+(1-rate_of_each_table)^(table_count-1)*rate_of_each_table*table_count
+(1 - rate_of_each_table) ^ table_count * table_count 
+
+function ret = calc_mean_disk_access_time(N,t,m,table_count,disk_speed)
+rate_of_each_table = calc_success_probability(N, t, m);
+temp = rate_of_each_table;
+all  = 0;
+for i = 1 : table_count
+    all = all + temp * i;
+    temp = temp * (1 - rate_of_each_table);
+end;
+all = all + (1 - rate_of_each_table) ^ table_count * table_count;
+
+ret = m*16/1024/1024 * disk_speed * all;
+\end{lstlisting}
+\chapter{彩虹表部分实现代码}
+\section{彩虹表生成}
+\begin{lstlisting}
+#ifdef _WIN32
+	#pragma warning(disable : 4786)
+#endif
+#ifdef _WIN32
+	#include <windows.h>
+#else
+	#include <unistd.h>
+#endif
+#include <time.h>
+#include "ChainWalkContext.h"
+
+void Usage()
+{
+	Logo();
+
+	printf("usage: rtgen hash_algorithm \\\n");
+	printf("       plain_charset plain_len_min plain_len_max \\\n");
+	printf("       rainbow_table_index \\\n");
+	printf("       rainbow_chain_length rainbow_chain_count \\\n");
+	printf("       file_title_suffix\n");
+	printf("       rtgen hash_algorithm \\\n");
+	printf("       plain_charset plain_len_min plain_len_max \\\n");
+	printf("       rainbow_table_index \\\n");
+	printf("             -bench\n");
+	printf("\n");
+
+	CHashRoutine hr;
+	printf("plain_charset: use any charset name in charset.txt here\n");
+	printf("plain_len_min:        min length of the plaintext\n");
+	printf("plain_len_max:        max length of the plaintext\n");
+	printf("rainbow_table_index:  index of the rainbow table\n");
+	printf("rainbow_chain_length: length of the rainbow chain\n");
+	printf("rainbow_chain_count\n");
+	printf("file_title_suffix\n");
+	printf("add your comment of the generated rainbow table here\n");
+	printf("-bench:               do some benchmark\n");
+
+	printf("\n");
+	printf("example: rtgen lm alpha 1 7 0 100 16 test\n");
+	printf("         rtgen md5 byte 4 4 0 100 16 test\n");
+	printf("         rtgen sha1 numeric 1 10 0 100 16 test\n");
+	printf("         rtgen lm alpha 1 7 0 -bench\n");
+}
+
+void Bench(string sHashRoutineName, string sCharsetName, int nPlainLenMin, 
+                                int nPlainLenMax, int nRainbowTableIndex)
+{
+  // Setup CChainWalkContext
+  if (!CChainWalkContext::SetHashRoutine(sHashRoutineName))
+  {
+    printf("hash routine %s not supported\n", sHashRoutineName.c_str());
+    return;
+  }
+  if (!CChainWalkContext::SetPlainCharset(sCharsetName, 
+                           nPlainLenMin, nPlainLenMax))
+    return;
+  if (!CChainWalkContext::SetRainbowTableIndex(nRainbowTableIndex))
+  {
+    printf("invalid rainbow table index %d\n", nRainbowTableIndex);
+    return;
+  }
+
+  // Bench hash
+  {
+	CChainWalkContext cwc;
+	cwc.GenerateRandomIndex();
+	cwc.IndexToPlain();
+
+	clock_t t1 = clock();
+	int nLoop = 2500000;
+	int i;
+	for (i = 0; i < nLoop; i++)
+		cwc.PlainToHash();
+	clock_t t2 = clock();
+	float fTime = 1.0f * (t2 - t1) / CLOCKS_PER_SEC;
+	}
+
+	// Bench step
+	{
+	CChainWalkContext cwc;
+	cwc.GenerateRandomIndex();
+
+	clock_t t1 = clock();
+	int nLoop = 2500000;
+	int i;
+	for (i = 0; i < nLoop; i++)
+	{
+		cwc.IndexToPlain();
+		cwc.PlainToHash();
+		cwc.HashToIndex(i);
+	}
+	clock_t t2 = clock();
+	float fTime = 1.0f * (t2 - t1) / CLOCKS_PER_SEC;
+
+	}
+}
+
+int main(int argc, char* argv[])
+{
+  if (argc == 7)
+  {
+    if (strcmp(argv[6], "-bench") == 0)
+    {
+	Bench(argv[1],argv[2],atoi(argv[3]),atoi(argv[4]),atoi(argv[5]));
+	return 0;
+    }
+  }
+
+  if (argc != 9)
+  {
+    Usage();
+    return 0;
+  }
+
+  string sHashRoutineName  = argv[1];
+  string sCharsetName      = argv[2];
+  int nPlainLenMin         = atoi(argv[3]);
+  int nPlainLenMax         = atoi(argv[4]);
+  int nRainbowTableIndex   = atoi(argv[5]);
+
+  int nRainbowChainLen     = atoi(argv[6]);
+  int nRainbowChainCount   = atoi(argv[7]);
+  string sFileTitleSuffix  = argv[8];
+
+  // nRainbowChainCount check
+  if (nRainbowChainCount >= 134217728)
+  {
+    printf("this will not support generate a table larger than 2GB\n");
+    printf("please use a smaller rainbow_chain_count\n");
+    return 0;
+  }
+
+  // Setup CChainWalkContext
+  if (!CChainWalkContext::SetHashRoutine(sHashRoutineName))
+  {
+    printf("hash routine %s not supported\n", sHashRoutineName.c_str());
+    return 0;
+  }
+  if (!CChainWalkContext::SetPlainCharset(sCharsetName, nPlainLenMin,
+                                                      nPlainLenMax))
+	return 0;
+  if (!CChainWalkContext::SetRainbowTableIndex(nRainbowTableIndex))
+  {
+	printf("invalid rainbow table index %d\n", nRainbowTableIndex);
+	return 0;
+  }
+  CChainWalkContext::Dump();
+
+// Low priority
+#ifdef _WIN32
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
+#else
+	nice(19);
+#endif
+
+// FileName
+char szFileName[256];
+sprintf(szFileName,"%s_%s#%d-%d_%d_%dx%d_%s.rt", sHashRoutineName.c_str(),
+	 sCharsetName.c_str(),
+	 nPlainLenMin,
+	 nPlainLenMax,
+	 nRainbowTableIndex,
+	 nRainbowChainLen,
+	 nRainbowChainCount,
+	 sFileTitleSuffix.c_str());
+
+// Open file
+	fclose(fopen(szFileName, "a"));
+	FILE* file = fopen(szFileName, "r+b");
+	if (file == NULL)
+	{
+		printf("failed to create %s\n", szFileName);
+		return 0;
+	}
+
+// Check existing chains
+	unsigned int nDataLen = GetFileLen(file);
+	nDataLen = nDataLen / 16 * 16;
+	if (nDataLen == nRainbowChainCount * 16)
+	{
+	  printf("precomputation of rainbow tables already finished\n");
+	  fclose(file);
+	  return 0;
+	}
+	if (nDataLen > 0)
+		printf("continuing from interrupted precomputation...\n");
+	fseek(file, nDataLen, SEEK_SET);
+
+// Generate rainbow table
+printf("generating...\n");
+CChainWalkContext cwc;
+clock_t t1 = clock();
+int i;
+for (i = nDataLen / 16; i < nRainbowChainCount; i++)
+{
+	cwc.GenerateRandomIndex();
+	uint64 nIndex = cwc.GetIndex();
+	if (fwrite(&nIndex, 1, 8, file) != 8)
+	{
+		printf("disk write fail\n");
+		break;
+	}
+
+	int nPos;
+	for (nPos = 0; nPos < nRainbowChainLen - 1; nPos++)
+	{
+		cwc.IndexToPlain();
+		cwc.PlainToHash();
+		cwc.HashToIndex(nPos);
+	}
+
+	nIndex = cwc.GetIndex();
+	if (fwrite(&nIndex, 1, 8, file) != 8)
+	{
+		printf("disk write fail\n");
+		break;
+	}
+
+	if ((i + 1) % 100000 == 0 || i + 1 == nRainbowChainCount)
+	{
+		clock_t t2 = clock();
+		int nSecond = (t2 - t1) / CLOCKS_PER_SEC;
+		printf("%d of %d chains generated (%d m %d s)\n",i+1,
+			 nRainbowChainCount,
+			 nSecond / 60,
+			 nSecond % 60);
+			 t1 = clock();
+	}
+}
+// Close
+fclose(file);
+return 0;
+}
+\end{lstlisting}
+\section{彩虹表破解}
+\begin{lstlisting}
+void GetTableList(string sWildCharPathName, vector<string>& vPathName)
+{
+  vPathName.clear();
+
+  string sPath;
+  int n = sWildCharPathName.find_last_of('\\');
+  if (n != -1)
+	sPath = sWildCharPathName.substr(0, n + 1);
+
+  _finddata_t fd;
+  long handle = _findfirst(sWildCharPathName.c_str(), &fd);
+  if (handle != -1)
+  {
+    do
+    {
+	string sName = fd.name;
+	if (sName != "." && sName != ".." && !(fd.attrib & _A_SUBDIR))
+	{
+		string sPathName = sPath + sName;
+		vPathName.push_back(sPathName);
+	}
+    } while (_findnext(handle, &fd) == 0);
+
+    _findclose(handle);
+  }
+}
+#else
+void GetTableList(int argc, char* argv[], vector<string>& vPathName)
+{
+	vPathName.clear();
+
+	int i;
+	for (i = 1; i <= argc - 3; i++)
+	{
+		string sPathName = argv[i];
+
+		struct stat buf;
+		if (lstat(sPathName.c_str(), &buf) == 0)
+		{
+			if (S_ISREG(buf.st_mode))
+				vPathName.push_back(sPathName);
+		}
+	}
+}
+#endif
+
+bool NormalizeHash(string& sHash)
+{
+	string sNormalizedHash = sHash;
+
+	if (   sNormalizedHash.size() % 2 != 0
+		|| sNormalizedHash.size() < MIN_HASH_LEN * 2
+		|| sNormalizedHash.size() > MAX_HASH_LEN * 2)
+		return false;
+
+// Make lower
+int i;
+for (i = 0; i < sNormalizedHash.size(); i++)
+{
+  if (sNormalizedHash[i] >= 'A' && sNormalizedHash[i] <= 'F')
+  sNormalizedHash[i] = sNormalizedHash[i] - 'A' + 'a';
+}
+
+// Character check
+for (i = 0; i < sNormalizedHash.size(); i++)
+{
+  if ((sNormalizedHash[i] < 'a' || sNormalizedHash[i] > 'f')
+	&& (sNormalizedHash[i] < '0' || sNormalizedHash[i] > '9'))
+	return false;
+}
+
+sHash = sNormalizedHash;
+return true;
+}
+
+void LoadLMHashFromPwdumpFile(string sPathName, vector<string>& vUserName, 
+                       vector<string>& vLMHash, vector<string>& vNTLMHash)
+{
+  vector<string> vLine;
+  if (ReadLinesFromFile(sPathName, vLine))
+  {
+    int i;
+    for (i = 0; i < vLine.size(); i++)
+    {
+      vector<string> vPart;
+      if (SeperateString(vLine[i], "::::", vPart))
+      {
+      string sUserName = vPart[0];
+      string sLMHash   = vPart[2];
+      string sNTLMHash = vPart[3];
+
+      if (sLMHash.size() == 32 && sNTLMHash.size() == 32)
+      {
+	if (NormalizeHash(sLMHash) && NormalizeHash(sNTLMHash))
+	{
+	  vUserName.push_back(sUserName);
+	  vLMHash.push_back(sLMHash);
+	  vNTLMHash.push_back(sNTLMHash);
+	}
+       }
+    }
+  }
+}
+else
+  printf("can't open %s\n", sPathName.c_str());
+}
+
+bool NTLMPasswordSeek(unsigned char* pLMPassword, int nLMPasswordLen,
+    int nLMPasswordNext, unsigned char* pNTLMHash, string& sNTLMPassword)
+{
+  if (nLMPasswordNext == nLMPasswordLen)
+  {
+    unsigned char md[16];
+    MD4(pLMPassword, nLMPasswordLen * 2, md);
+    if (memcmp(md, pNTLMHash, 16) == 0)
+    {
+      sNTLMPassword = "";
+      int i;
+      for (i = 0; i < nLMPasswordLen; i++)
+      sNTLMPassword += char(pLMPassword[i * 2]);
+      return true;
+     }
+    else
+      return false;
+    }
+
+if (NTLMPasswordSeek(pLMPassword,nLMPasswordLen,nLMPasswordNext+1,
+                                        pNTLMHash, sNTLMPassword))
+  return true;
+
+if (   pLMPassword[nLMPasswordNext * 2] >= 'A'
+	&& pLMPassword[nLMPasswordNext * 2] <= 'Z')
+{
+  pLMPassword[nLMPasswordNext * 2] = pLMPassword[nLMPasswordNext * 2]
+                                                      - 'A' + 'a';
+  if (NTLMPasswordSeek(pLMPassword,nLMPasswordLen,nLMPasswordNext+1,
+                                          pNTLMHash, sNTLMPassword))
+    return true;
+  pLMPassword[nLMPasswordNext * 2] = pLMPassword[nLMPasswordNext * 2]
+   							 - 'a' + 'A';
+}
+
+return false;
+}
+
+bool LMPasswordCorrectCase(string sLMPassword,
+	            unsigned char* pNTLMHash, string& sNTLMPassword)
+{
+  if (sLMPassword.size() == 0)
+  {
+    sNTLMPassword = "";
+    return true;
+  }
+
+unsigned char* pLMPassword = new unsigned char[sLMPassword.size() * 2];
+int i;
+for (i = 0; i < sLMPassword.size(); i++)
+{
+  pLMPassword[i * 2    ] = sLMPassword[i];
+  pLMPassword[i * 2 + 1] = 0x00;
+}
+bool fRet = NTLMPasswordSeek(pLMPassword, sLMPassword.size(), 0,
+                                           pNTLMHash, sNTLMPassword);
+delete pLMPassword;
+
+return fRet;
+}
+
+void Usage()
+{
+  Logo();
+
+  printf("usage: rcrack rainbow_table_pathname -h hash\n");
+  printf("       rcrack rainbow_table_pathname -l hash_list_file\n");
+  printf("       rcrack rainbow_table_pathname -f pwdump_file\n");
+  printf("rainbow_table_pathname: pathname of the rainbow table(s),
+					 wildchar(*, ?) supported\n");
+  printf("-h hash:                use raw hash as input\n");
+  printf("-l hash_list_file:      use hash list file as input,
+ 					 each hash in a line\n");
+  printf("-f pwdump_file: use pwdump file as input, this will handle 
+					    lanmanager hash only\n");
+  printf("\n");
+  printf("example: rcrack *.rt -h 5d41402abc4b2a76b9719d911017c592\n");
+  printf("         rcrack *.rt -l hash.txt\n");
+  printf("         rcrack *.rt -f hash.txt\n");
+}
+
+int main(int argc, char* argv[])
+{
+  if (argc < 4)
+  {
+    Usage();
+    return 0;
+   }
+   string sInputType        = argv[argc - 2];
+   string sInput            = argv[argc - 1];
+
+// vPathName
+vector<string> vPathName;
+GetTableList(argc, argv, vPathName);
+if (vPathName.size() == 0)
+{
+  printf("no rainbow table found\n");
+    return 0;
+}
+
+// fCrackerType, vHash, vUserName, vLMHash
+bool fCrackerType;		// true: hash cracker, false: lm cracker
+vector<string> vHash;		// hash cracker
+vector<string> vUserName;	// lm cracker
+vector<string> vLMHash;		// lm cracker
+vector<string> vNTLMHash;	// lm cracker
+if (sInputType == "-h")
+{
+  fCrackerType = true;
+
+  string sHash = sInput;
+  if (NormalizeHash(sHash))
+    vHash.push_back(sHash);
+  else
+    printf("invalid hash: %s\n", sHash.c_str());
+}
+else if (sInputType == "-l")
+{
+  fCrackerType = true;
+  string sPathName = sInput;
+  vector<string> vLine;
+  if (ReadLinesFromFile(sPathName, vLine))
+  {
+    int i;
+    for (i = 0; i < vLine.size(); i++)
+    {
+      string sHash = vLine[i];
+      if (NormalizeHash(sHash))
+        vHash.push_back(sHash);
+      else
+	printf("invalid hash: %s\n", sHash.c_str());
+    }
+  }
+  else
+    printf("can't open %s\n", sPathName.c_str());
+}
+else if (sInputType == "-f")
+{
+  fCrackerType = false;
+  string sPathName = sInput;
+  LoadLMHashFromPwdumpFile(sPathName, vUserName, vLMHash, vNTLMHash);
+}
+else
+{
+  Usage();
+  return 0;
+}	
+if (fCrackerType && vHash.size() == 0)
+ 	return 0;
+if (!fCrackerType && vLMHash.size() == 0)
+ 	return 0;
+
+// hs
+CHashSet hs;
+if (fCrackerType)
+{
+  int i;
+  for (i = 0; i < vHash.size(); i++)
+  hs.AddHash(vHash[i]);
+}
+else
+{
+  int i;
+  for (i = 0; i < vLMHash.size(); i++)
+  {
+  hs.AddHash(vLMHash[i].substr(0, 16));
+  hs.AddHash(vLMHash[i].substr(16, 16));
+  }
+}
+
+// Run
+CCrackEngine ce;
+ce.Run(vPathName, hs);
+}
+\end{lstlisting}
