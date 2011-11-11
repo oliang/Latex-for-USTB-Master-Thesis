@@ -1,5 +1,26 @@
 %\addcontentsline
 \chapter* {摘~~要}
 \addcontentsline{toc}{chapter}{摘~~要}
+在密码分析学中有许多方法对密钥进行破解和分析，但在实际当中使用最多的，同时也是最有效的方法是时空折中法。在1980年Hellman第一次提出基于时空折中算法进行密码分析，在随后的2003年，Oechslin在原有的算法上提出了现在著名的彩虹表算法。
+
+本文基于以上理论基础，对彩虹表算法进行深入的理论分析和研究，给出了完整的实现，并从基于新型的Fermi构架的CUDA并行计算、存储结构和算法结构三方面进行优化设计。
+我们对SHA1、MD5和NTLM三种Hash算法进行实验分析，实验数据表明，SHA1算法破解的速度提升了5.88倍，MD5算法破解的速度提升了6.3倍，NTLM算法破解的速度提升了1.77倍；在磁盘存储空间上，我们重新设计了表的存储结构，得到的新表比原来的节省了56.25\%的磁盘存储空间，进一步提升了实际破解密钥的时间。
+
+本文可以实现多种Hash密码算法的破解，其他研究人员可以在此基础上加入特定的Hash算法，如Word、pdf文档的Hash加密算法，数据库中的Hash加密算法等等。
+
+\vskip 5cm
+\noindent{\bf\zihao{4}关键词：}彩虹表，密码分析，GPU，时空折中\\
 \chapter* {Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
+In cryptanalysis, there are many ways to crack the key and analysis, but in practice the most used, but also the most effective way is Time-Memory Tradeoff (TMTO).
+In 1980, Hellman first proposed the algorithm based on Time-Memory Trade-off cryptanalysis, in the subsequent 2003, Oechslin on the original algorithm proposed algorithm is now famous rainbow table.
+
+Based on the above theory, based on rainbow tables algorithm in-depth theoretical analysis and research, shows the complete implementation, and from the Fermi architecture based on the new CUDA parallel computing, storage structure and algorithm structure to optimize the design in three areas.
+Our experimental analysis of the three Hash algorithms:SHA1,MD5 and NTLM.
+Experimental data show that, SHA1 algorithm to break the 5.88 times faster, MD5 algorithm cracked 6.3 times faster, NTLM algorithm improves the speed of crack 1.77 times;
+In the disk storage space, we redesigned the table storage structure to be the new table than the original 56.25\% saving of disk storage space, further enhancing the actual time to crack the key.
+
+We can achieve a variety of Hash algorithms to crack,other researchers can join on the basis of specific Hash algorithms, such as Word, pdf documents Hash encryption algorithm, encryption algorithm of Hash database, etc.
+
+\vskip 5cm
+\noindent{\bf\zihao{4}KeyWords:}Rainbow Table; Cryptanalysis; GPU; Time-Memory Trade-off\\
