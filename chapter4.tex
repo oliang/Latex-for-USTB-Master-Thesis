@@ -85,7 +85,7 @@ P_{perfect}^{max}=1-\left(1-\dfrac{m_{max}}{N}\right)^t \approx 1-e^{-t\tfrac{m_
 
 \section{彩虹表的构建与产生}
 \subsection{密钥的生成}
-首先用随机函数生成一个Index，为了确保Index在密钥空间N里，我们对Index进行取模运算：$Index mod N$。再执行IndexToPlain()函数得到在初始设定的密钥空间N里的密钥。
+首先用随机函数生成一个Index，为了确保Index在密钥空间N里，我们对Index进行取模运算：$Index\quad mod \quad N$。再执行IndexToPlain()函数得到在初始设定的密钥空间N里的密钥。
 \subsection{定义Hash函数}
 本文的实现了对SHA-1、MD5和LM三种Hash函数的破解，下面代码对LM算法的实现：
 \begin{lstlisting}
@@ -111,7 +111,7 @@ unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md);
 \subsection{定义Reduce函数}
 Reduce函数是将密文映射到密钥空间中，彩虹链中的每个位置使用的Reduce函数都是不同的，因此我们可以将彩虹链的位置作为Reduce函数的主要参数进行计算。所以Reduce函数定义如下：
 \begin{equation}
-R(密文,密钥)=(密文+链位置+偏移量)mod 密钥总空间
+R(\text{密文},\text{密钥})=(\text{密文+链位置+偏移量})\quad mod \quad \text{密钥总空间}
 \end{equation}
 具体的代码实现如下：
 \begin{lstlisting}
