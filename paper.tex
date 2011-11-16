@@ -4,7 +4,9 @@
 \usepackage{graphicx}
 \usepackage{extarrows}
 %\usepackage{ctexcap}
-%\usepackage[super]{cite}
+\usepackage[super]{cite}
+\usepackage{pdfpages}
+
 
 %On Mac OS
 \graphicspath{{pic/}}
@@ -85,6 +87,7 @@ showstringspaces=false
 }
 % ===========================================================
 \begin{document}
+\includepdfmerge{cover.pdf,1,3,5,7}
 \pagenumbering{Roman}
 \include{thanks}
 \include{abstract}
@@ -95,11 +98,11 @@ showstringspaces=false
 \include{chapter4}
 \include{chapter5}
 \include{chapter6}
-\include{appendix}
 %Reference
 %\bibliographystyle{plain} \bibliography{reference}
 \bibliographystyle{unsrt} \bibliography{reference}
 \nocite{*}
 \addcontentsline{toc}{chapter}{参考文献} 
+\include{appendix}
 \end{document}
 
