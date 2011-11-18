@@ -123,7 +123,101 @@ void CChainWalkContext::HashToIndex(int nPos)
 
 \end{lstlisting}
 \subsection{彩虹表参数}
-彩虹表算法中几乎每个参数都对构建一个高质量的彩虹表有影响，比如参数m决定彩虹表存储空间大小，t决定在线分析的时间，彩虹表张数l代表了彩虹表的存储个数，同时也影响着破解成功概率。如何有机地组合这些参数构成最优的
+彩虹表算法中几乎每个参数都对构建一个高质量的彩虹表有影响，比如参数m决定彩虹表存储空间大小，t决定在线分析的时间，彩虹表张数l代表了彩虹表的存储个数，同时也影响着破解成功概率。本小节将讨论如何有机地组合这些参数构成最优的彩虹表文件。首先我们将对上一节彩虹表算法的参数用Matlab软件实现函数封装，下面请看具体的参数实现：
+
+1.破解成功率（P）\quad 在整个算法中最为关键的性能指标之一，在保证高破解成功率的前提下，如果快速地破解密钥也是本文研究的关键技术之一。
+\begin{lstlisting}
+\% 1 - (1 - 1 / N)^(m(1) + m(2) + m(3) + ... + m(t - 1))
+\% m(1) = m, m(i) = N * (1 - (1 - 1 / N) ^ m(i - 1))
+function ret = calc_success_probability(n, min, max, t, m, table_count)
+format long g;
+arr = zeros(1, t - 1);
+arr(1) = m;
+format long g;
+N = calc_N(n,min,max);
+for i = 2 : t - 1
+    format long g;
+        arr(i) = N * (1 - (1 - 1 / N) ^ arr(i - 1));
+end;
+exp = 0;
+for i = 1 : t - 1
+    format long g;
+        exp = exp + arr(i);
+end;
+format long g;
+success_probability_1 = 1 - (1 - 1 / N) ^ exp;
+success_probability_table_count=1-(1-success_probability_1)^table_count;
+ret = success_probability_table_count;
+
+function ret = calc_N( n, min, max)
+arr = zeros(1, max - 1);
+for i = 1 : max
+        arr(i) = n^i;
+end;
+exp = 0;
+for i = 1 : max
+        exp = exp + arr(i);
+end;
+ret = exp;
+\end{lstlisting}
+
+2.密钥空间（N）\quad 是彩虹表算法对破解密钥算法的能力指标，好的彩虹表能够在确保较高的破解成功率的情况下，尽可能地包含大的密钥空间，密钥空间是随着密钥长度的增长而几何增长的，所以每增加一位密钥长度，彩虹表的存储空间会大幅增大，从而会影响破解成功率和破解时间等性能指标，在Matlab下的函数封装如下：
+\begin{lstlisting}
+function ret = calc_N( n, min, max)
+arr = zeros(1, max );
+for i = 1 : max
+        arr(i) = n^i;
+end;
+
+exp = 0;
+for i = 1 : max
+        exp = exp + arr(i);
+end;
+format long g;
+ret = exp;
+\end{lstlisting}
+
+3.破解时间\quad 是衡量彩虹表算法性能的最直观的参数，也是本文重点优化的参数的，减小破解时间，提升破解速度的具体优化技术将在下一章详细介绍。
+\begin{lstlisting}
+function ret = calc_max_cryptanalysis_time(t, table_count, step_speed)
+ret = t*t/2 / step_speed * table_count;
+\end{lstlisting}
+
+4.磁盘读取时间 \quad 是从存储上的一个性能指标，它决定于磁盘文件的大小和实验环境的存储方式，对这个参数的优化也是本文的重点。一般来说磁盘的读取时间会占到整个破解时间的20\%～30\%，在保证相同的破解成功率的前提下，减小彩虹表的存储大小，优化存储方式，提高文件读取速度，从而提高彩虹表算法的性能。
+\begin{lstlisting}
+function ret = calc_max_disk_access_time(m, table_count, disk_speed)
+ret = m*16/1024/1024 * disk_speed * table_count;
+\end{lstlisting}
+
+5.磁盘占用空间（M）\quad 是彩虹表算法的空间代价，我们知道彩虹表算法是基于时空折中算法的，就是不断地在时间代价上和空间代价上平衡折中，如果在不增加时间代价的前提下，减小空间代价也是本文的实现的技术要点之一。
+\begin{lstlisting}
+function ret = calc_disk_usage(m, table_count)
+ret = ceil(m*16*table_count / 1024 / 1024 );
+\end{lstlisting}
+
+6.彩虹链的长度（t）\quad 是每条彩虹链的在线计算步长，这个参数将影响到算法的假警个数以及在线分析的时间。在给定的破解成功率、密钥空间、彩虹链个数和彩虹表张数的条件下，
+我们需要计算出一个合适的链条长度，而不是随意估算一个。下面给出了Matlab程序的函数封装：
+\begin{lstlisting}
+function ret = calc_t(N, success_probability, m, table_count)
+success_probability_each=1-exp(log(1-success_probability)/table_count);
+exp_min = log(1 - success_probability_each) / log(1 - 1 / N);
+
+exp_all = 0;
+t = 0;
+next = m;
+
+while exp_all < exp_min
+        exp_all = exp_all + next;
+        t = t + 1;
+        next = N * (1 - (1 - 1 / N) ^ next);
+
+        if t > 131072   % too large
+                break;
+        end;
+end;
+
+ret = t;
+\end{lstlisting}
 \subsection{构建彩虹表}
 彩虹表算法实现的首要事情就是要产生符合自己需求的彩虹表文件，本次实现要求彩虹表的破解成功率在99.9％以上。
 
@@ -230,6 +324,44 @@ M=16*m*l
 第四步，通过第三步找到的索引，进行f函数计算得到产生目标密钥“re3xes”的明文“passwd”，并验证其正确性。
 \subsection{假警分析}
 无论是上一章介绍的Hellman经典算法，还是本文采用的彩虹表算法，都是会发生假警，假警的最大弊端是对存储资源和计算时间造成严重的重复和浪费，因此对假警的检测尤为重要，彩虹表算法中采用的检查点技术用于检测假警，通过实验表明，增加0.89\%的内存用于存储检查点节省了10.99\%的密码分析时间。
+\subsection{举例}
+我们取$m=200000000，t=5700，l=6，N=797193877550$；
+其中N为密钥空间，密钥长度取1~7位，取值范围为：小写字母＋数字＋10个特殊字符，
+计算$N=50^1 + 50^2 + 50^3 + 50^4 + 50^5 + 50^6 + 50^7 = 797193877550$。
+通过Matlab程序，计算出单张表成功破解的概率为：
+
+\qquad       >> $calc_success_probability(797193877550, 5700, 200000000) $
+
+\qquad  \qquad            ans 0.6864 \\
+6张表的破解概率为$1 - (1 - 0.6864) ^ 6 = 0.9990=99.9\%$；
+占用的存储空间为：$m * 16 * l = 19200000000 B = 18.3 GB$。
+
+我们使用彩虹表生成程序得到上述的彩虹表文件，
+%\begin{figure}[!ht]
+%\centering
+%\includegraphics[scale=0.4]{rtgen}
+%\caption{生成彩虹表}
+%\end{figure}
+在得到彩虹表文件后，接下来的工作就是准备密钥，我们从一台Windows XP系统中设定一个登陆密码为：$577755949978$。
+从SAM文件中提取出这个用户的NTLM的Hash值，为$20fcb07c99ba7f2a6491294a6f032113$。
+
+我们采用两个实验环境进行破解该密码，第一个为普通的PC台式机，Intel(R) Pentium(R) D CPU 2.80GHz的处理器，2G内存，我们得到的结果如下：
+\begin{figure}[!ht]
+\centering 
+\includegraphics[scale=0.35]{result01}
+\caption{破解实验结果1}
+\end{figure}
+从结果我们可以看出破解的总时间为26.48s，磁盘读写时间为24.38s，假警数为10088220，密码明文为：577755949978，与之前设定密码一致。
+我们还可以看到，在搜索这个密钥的过程中，并没有在第一张表找到，而是在第二张表中命中的。
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.4]{result02}
+\caption{破解实验结果2}
+\end{figure}
+
+第二个实验环境为HP的DL580g7服务器，配置的是Intel(R) Xeon(R) E7350 1.87GHz的处理器，16G的内存，同样是破解上面的密钥，我们来看看实际的破解结果：
+我们可以看到，破解总时间为：2.22s，磁盘读入时间为：2.10s，假警数为：11775500，最后的破解结果也是正确的，密钥明文为：577755949978。
+%\clearpage
 \section{实验结果与分析}
 本次实验环境为普通台式PC机，酷睿i5双核2.4GHz处理器，4G内存，操作系统为RedHat企业版6.0。
 实验分两组进行，第一组为1个密钥，第二组为10个密钥，密钥字符集都为字母加数字，计算密钥空间$N=36+36^2+36^3+\cdots+36^{10}=3760620109779060$。

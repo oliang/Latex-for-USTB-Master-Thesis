@@ -1,40 +1,5 @@
 \appendix
 \chapter{MATLAB程序}
-\section{破解成功率}
-\begin{lstlisting}
-\% 1 - (1 - 1 / N)^(m(1) + m(2) + m(3) + ... + m(t - 1))
-\% m(1) = m, m(i) = N * (1 - (1 - 1 / N) ^ m(i - 1))
-function ret = calc_success_probability(n, min, max, t, m, table_count)
-format long g;
-arr = zeros(1, t - 1);
-arr(1) = m;
-format long g;
-N = calc_N(n,min,max);
-for i = 2 : t - 1
-    format long g;
-	arr(i) = N * (1 - (1 - 1 / N) ^ arr(i - 1));
-end;
-exp = 0;
-for i = 1 : t - 1
-    format long g;
-	exp = exp + arr(i);
-end;
-format long g;
-success_probability_1 = 1 - (1 - 1 / N) ^ exp;
-success_probability_table_count=1-(1-success_probability_1)^table_count;
-ret = success_probability_table_count;
-
-function ret = calc_N( n, min, max)
-arr = zeros(1, max - 1);
-for i = 1 : max
-	arr(i) = n^i;
-end;
-exp = 0;
-for i = 1 : max
-	exp = exp + arr(i);
-end;
-ret = exp;
-\end{lstlisting}
 \section{磁盘空间与成功率}
 \begin{lstlisting}
 function advantage_of_multiple_table(N, t, disk_usage_min, disk_usage_max)

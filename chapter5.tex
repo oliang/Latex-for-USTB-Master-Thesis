@@ -175,10 +175,9 @@ SAN存储方式创造了存储的网络化。存储网络化顺应了计算机�
 我们还可以采用iSCSI网络存储结构，iSCSI技术一种优IBM公司研究开发的，是一种新存储技术，可是实现在IP网络上运行SCSI协议，使其能在高速千兆或万兆以太网上进行网络传输。再加上FCoE技术，可以达到几Gb/s的存储速度。
 
 接着是对存储硬件升级，这里我们主要升级的是硬盘，下表\ref{tab:5.1}是我们对不同配置硬盘的读速度进行数据对比，从表中可以明显看出使用SSD硬盘RAID0阵列后，读取速度将比一块7200转的硬盘提升了10倍，这将大大缩小破解的实际时间。最后的需要升级的系统内存，我们知道在计算机存储体系结构中，内存的读取速度要比硬盘快上许多倍，在Linux系统上内存以/dev/shm/设备呈现给用户，用户可以对次进行读写操作。
-
 \begin{longtable}{@{\extracolsep{\fill}}ccc}
 \caption{各种存储系统读速度对比数据}\\\toprule[1pt]
-\multicolumn{1}{c}{硬盘配置} & 
+\multicolumn{1}{c}{硬盘配置} &
 \multicolumn{1}{c}{读速度(hdparm -t)} &
 \multicolumn{1}{c}{索引速度} \\\midrule
 1x Maxtor 6B250S0 7200 RPM & 54MB/s & 640h/s \\
@@ -187,7 +186,21 @@ SAN存储方式创造了存储的网络化。存储网络化顺应了计算机�
 \bottomrule[1pt]
 \label{tab:5.1}
 \end{longtable}
+在HP\quad DL580g7服务器上配置有16GB的内存，而我们实验所用的彩虹表一共占用磁盘空间8.8GB，我们把磁盘上的文件目录挂载到tmpfs文件系统上，
+执行命令$“mount\quad -t\quad tmpfs\quad -o\quad size=100\%\quad /test”$，然后关闭交换分区$“swapoff\quad -a”$。
+为了消除缓存的影响，我们清空所有虚拟内存的缓存$“echo\quad 3\quad >\quad /proc/sys/vm/drop\_caches”$。
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.7]{disk}
+\caption{从硬盘读取的效率}
+\end{figure}
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.7]{memory}
+\caption{直接从内存读取}
+\end{figure}
 
+从上面实验结果可以看出，使用硬盘的读取时间为11.14s，预先把文件写入内存后，直接读取内存的时间为2.49s，当然这里面还有内存缺页的损失，所以只提升了4.47倍，但是可以验证了这一设想的正确性。
 \section{算法结构优化}
 密钥明文字符集被预计算成hash密文并和明文成对地储存在彩虹链中，如果要破解的hash密文在我们之前生成好的彩虹链中，则破解成功，反之破解失败。彩虹链存储的“明文-密文”对数量随着链表长度（t）的增加而增加，然而这些彩虹链会产生冲突，主要由于减约函数并不是一一对应的。图\ref{fig:5.5}示意了冲突的过程，最后这两条链表会合并成一条。
 \begin{figure}[!ht]
